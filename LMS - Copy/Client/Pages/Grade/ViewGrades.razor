@@ -1,0 +1,152 @@
+﻿@page "/Grades/View"
+@using LMS.Shared.Models;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject NavigationManager Navigate
+@inject HttpClient Http
+@inject IJSRuntime js
+
+<style>
+   
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        max-width: 100%;
+    }
+
+    .btn1 {
+        width: 180px;
+        height: 100px;
+        background-color: #fafafa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 2rem;
+        margin-right: 3rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        border-radius: 10px;
+    }
+
+        .btn1.fb-btn1 {
+            box-shadow: 0 20px 20px -17px rgba(0,111,255,0.53);
+        }
+
+            .btn1.fb-btn1:hover {
+                transform: scale(1.2);
+                box-shadow: 0 30px 45px -15px rgba(0,111,255,0.65);
+            }
+
+        .btn1.ig-btn1 {
+            box-shadow: 0 20px 20px -17px rgba(255,16,39,0.5);
+        }
+
+            .btn1.ig-btn1:hover {
+                transform: scale(1.2);
+                box-shadow: 0 30px 45px -15px rgba(255,16,39,0.57);
+            }
+
+        .btn1.tw-btn1 {
+            box-shadow: 0 20px 20px -17px rgba(0,255,255,0.53);
+        }
+
+            .btn1.tw-btn1:hover {
+                transform: scale(1.2);
+                box-shadow: 0 30px 45px -15px rgba(0,255,255,0.57);
+            }
+
+    span.circle {
+        border-radius: 50%;
+        -moz-border-radius: 50%;
+        -webkit-border-radius: 50%;
+        color: black;
+        display: inline-block;
+        font-size:23px;
+        line-height: 80px;
+        @*margin-right: 5px;*@
+        text-align: center;
+        width: 80px;
+    }
+</style>
+
+@if (Grades == null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+<div class="row">
+    <div class="col-xs-1 col-sm-1 col-md-1 text-left">
+        <a href="/"> <img src="/images/back.png" width="30" /></a>
+    </div>
+    <div class="col-xs-10 col-sm-10 col-md-10">
+        <div class="text-center" style="padding: 10px; font-family: 'Helvetica Neue', sans-serif; font-size: 23px; letter-spacing: 1px; line-height: 1; text-align: center;">Select Grade</div>
+    </div>
+</div>
+<div class="text-right">        
+    <div class="text-right" style="font-family: 'Helvetica Neue', sans-serif;color:firebrick;font-size:11px;margin:0; letter-spacing: 1px;">Home -> Grades</div>
+</div>
+    <hr style="height: 2px; background-color: #09db94;margin-top:0" />
+    var counter = 0;
+    <div class="container">
+        <div class="row">
+            @foreach (var Grade in Grades)
+            {
+                <div class="col-xl-3 col-sm-6 col-12 mt-4" @onclick="( () => ViewSubject(Grade.GradeId))">
+                    <div class="@ClassCode[counter]" style="color:gray">
+                        @*<i class="fa fa-facebook" aria-hidden="true" id="fb"></i>*@
+                        @*<div>Grade &nbsp;</div>
+                            <div>@Grade.Code</div>*@
+                        <span class="circle" style="background:@ColorCode[counter]">@Grade.Code <sub style="left:-5px">th</sub></span>
+                    </div>
+                </div>
+                counter++;
+            }
+
+            @* <div class="col-xl-3 col-sm-6 col-12 mt-4 ">
+                    <div class="btn ig-btn" style="color:gray">
+                        <div>Grade&nbsp;</div>
+                        <div> 10</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12 mt-4">
+                    <div class="btn tw-btn" style="color:gray">
+                        <div>Grade&nbsp;</div>
+                        <div> 11</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12 mt-4 ">
+                    <div class="btn ig-btn" style="color:gray">
+                        <div>Grade&nbsp;</div>
+                        <div> 12</div>
+                    </div>
+                </div>*@
+        </div>
+    </div>
+}
+
+
+@code {
+    private IEnumerable<Grade> Grades;
+    public List<string> ClassCode = new List<string>() { "btn1 fb-btn1", "btn1 tw-btn1", "btn1 ig-btn1", "btn1 fb-btn1" };
+    public List<string> ColorCode = new List<string>() { "rgba(0,111,255,0.6)", "rgba(0,255,255,0.8)", "rgba(255,16,39,0.57)", "rgba(0,111,255,0.65)" };
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Grades = await Http.GetFromJsonAsync<List<Grade>>("api/Grades");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public void ViewSubject(int id)
+    {
+        Navigate.NavigateTo($"Subjects/View/{id}");
+    }
+}

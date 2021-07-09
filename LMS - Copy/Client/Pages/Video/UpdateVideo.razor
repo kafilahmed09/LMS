@@ -1,0 +1,149 @@
+﻿@page "/Video/Update/{id:int}/{key:int}/{pre:int}/{lst:int}"
+
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@using System.Net.Http
+@inject NavigationManager Navigate
+
+<h3>Update Video</h3>
+<hr />
+
+<EditForm Model="@Video">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <select @onchange="@GradeClicked" class="form-control" value="@defaultValueGrade" disabled="disabled">
+                    @foreach (var grade in grades)
+                    {
+                        <option value="@grade.GradeId">@grade.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-control" @onchange="@SubjectClicked" value="@defaultValueSubject" disabled="disabled">
+                @if (subjects != null)
+                {
+                    @foreach (var subject in subjects.Where(a=>a.GradeId.ToString() == gradeId))
+                    {
+                        <option value="@subject.SubjectId">@subject.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select class="form-control" @onchange="@ChapterClicked" value="@defaultValueChapter" disabled="disabled">
+                @if (chapters != null)
+                {
+                    @foreach (var chapter in chapters.Where(a=>a.SubjectId.ToString() == subjectId))
+                    {
+                        <option value="@chapter.ChapterId">@chapter.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Video Name</label>
+                <input type="text" class="form-control" @bind-value="Video.Name" readonly="readonly"/>
+            </div>            
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Serial no</label>
+                <input type="text" class="form-control" @bind-value="Video.SerialNo" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Video Link</label>
+                <input type="text" class="form-control" @bind-value="Video.VideoLink" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="UpdateVideoBtn">Update Video</button>
+                <a href="/Video/Display/@key/@pre/@lst" class="btn btn-info">Back to list</a>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    public Video Video = new Video();
+    [Parameter] public int Id { get; set; }
+    [Parameter] public int key { get; set; }
+    [Parameter] public int pre { get; set; }
+    [Parameter] public int lst { get; set; }
+    private List<Grade> grades = new List<Grade>();
+    List<Subject> subjects = new List<Subject>();
+    List<Chapter> chapters = new List<Chapter>();
+    string gradeId { get; set; }
+    string subjectId { get; set; }
+    string defaultValueGrade = "";
+    string defaultValueSubject = "";
+    string defaultValueChapter = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Video = await Http.GetFromJsonAsync<Video>($"api/Videos/{Id}");
+
+            grades = await Http.GetFromJsonAsync<List<Grade>>("api/Grades");
+            subjects = await Http.GetFromJsonAsync<List<Subject>>($"api/Subjects");
+            chapters = await Http.GetFromJsonAsync<List<Chapter>>($"api/Chapters");
+            gradeId = Video.Chapter.Subject.GradeId.ToString();
+            subjectId = Video.Chapter.SubjectId.ToString();
+            defaultValueGrade = Video.Chapter.Subject.GradeId.ToString();
+            defaultValueSubject = Video.Chapter.SubjectId.ToString();
+            defaultValueChapter = Video.ChapterId.ToString();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task UpdateVideoBtn()
+    {
+        await Http.PutAsJsonAsync($"api/Videos/{Id}", Video);
+        Navigate.NavigateTo($"Video/Display/{key}/{pre}/{lst}");
+    }
+
+    public async Task GradeClicked(ChangeEventArgs gradeEvent)
+    {
+        subjects.Clear();
+        gradeId = gradeEvent.Value.ToString();
+        subjects = await Http.GetFromJsonAsync<List<Subject>>($"api/Subjects");
+        subjects = subjects.Where(a=>a.GradeId == Convert.ToInt32(gradeId)).ToList();
+
+        chapters.Clear();
+        subjectId = subjects.Min(a=>a.SubjectId).ToString();
+        chapters = await Http.GetFromJsonAsync<List<Chapter>>($"api/Chapters");
+        chapters = chapters.Where(a => a.SubjectId == Convert.ToInt32(subjectId)).ToList();
+        this.StateHasChanged();
+    }
+    public async Task SubjectClicked(ChangeEventArgs subjectEvent)
+    {
+        chapters.Clear();
+        subjectId = subjectEvent.Value.ToString();
+        chapters = await Http.GetFromJsonAsync<List<Chapter>>($"api/Chapters");
+        chapters = chapters.Where(a => a.SubjectId == Convert.ToInt32(subjectId)).ToList();
+        this.StateHasChanged();
+    }
+    public void ChapterClicked(ChangeEventArgs chapterEvent)
+    {
+        Video.ChapterId = int.Parse(chapterEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+}

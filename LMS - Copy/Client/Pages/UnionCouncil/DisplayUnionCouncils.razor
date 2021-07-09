@@ -1,0 +1,73 @@
+﻿@page "/UnionCouncil/Display"
+@using LMS.Shared.Models;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject NavigationManager Navigate
+@inject HttpClient Http
+<h1>List of UnionCouncils</h1>
+
+@if (UnionCouncils == null)
+{
+<div class="spinner"></div>
+}
+else
+{<div class="text-right"><button class="btn btn-info" @onclick="CreateUnionCouncil">Create New Union Council</button></div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Tehsil</th>
+                <th>District</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var UnionCouncil in UnionCouncils)
+            {
+                <tr>
+                    <td>@UnionCouncil.Name</td>
+                    <td>@UnionCouncil.Tehsil.Name</td>
+                    <td>@UnionCouncil.Tehsil.District.Name</td>
+                    <td><button class="btn btn-info" @onclick="( () => UpdateUnionCouncil(UnionCouncil.UnionCouncilId))">Edit</button></td>
+                    <td><button class="btn btn-warning" @onclick="( () => DeleteUnionCouncil(UnionCouncil.UnionCouncilId))">delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<UnionCouncil> UnionCouncils;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            UnionCouncils = await Http.GetFromJsonAsync<List<UnionCouncil>>("api/UnionCouncils");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task DeleteUnionCouncil(int id)
+    {
+        await Http.DeleteAsync($"api/UnionCouncils/{id}");
+        UnionCouncils = await Http.GetFromJsonAsync<List<UnionCouncil>>("api/UnionCouncils");
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void UpdateUnionCouncil(int id)
+    {
+        Navigate.NavigateTo($"UnionCouncil/Update/{id}");
+    }
+
+    public void CreateUnionCouncil()
+    {
+        Navigate.NavigateTo($"UnionCouncil/Create");
+    }
+}

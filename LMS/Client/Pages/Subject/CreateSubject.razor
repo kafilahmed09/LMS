@@ -1,0 +1,107 @@
+﻿@page "/Subject/Add"
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager Navigate
+@using System.IO
+
+
+<h3>Create Subject</h3>
+<hr />
+
+@if (DisplayMessage != null)
+{
+    <span class="alert-info">@DisplayMessage</span>
+}
+
+<EditForm Model="@Subject">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <select @onchange="@GradeClicked" class="form-control">
+                    <option value="">-- Select Grade --</option>
+                    @foreach (var grade in grades)
+                    {
+                        <option value="@grade.GradeId">@grade.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Subject Name</label>
+                <input type="text" class="form-control" id="txtCN" @bind-value="Subject.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="OnSubmit">Create Subject</button>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <InputFile OnChange="OnInputFileChange" />
+            <div class="row">
+                <img src="@imgUrl" width="200">
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+
+@code {
+    public string DisplayMessage;
+    private List<Grade> grades = new List<Grade>();
+    public Subject Subject = new Subject();
+    string imgUrl = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            grades = await Http.GetFromJsonAsync<List<Grade>>("api/Grades");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public void GradeClicked(ChangeEventArgs gradeEvent)
+    {
+        Subject.GradeId = int.Parse(gradeEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+
+    IReadOnlyList<IBrowserFile> selectedFiles;
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        IBrowserFile imgFile = e.File;
+        var buffers = new byte[imgFile.Size];
+        await imgFile.OpenReadStream().ReadAsync(buffers);
+        string imageType = imgFile.ContentType;
+        imgUrl = $"data:{imageType};base64,{Convert.ToBase64String(buffers)}";
+        this.StateHasChanged();
+    }
+    private async void OnSubmit()
+    {
+        foreach (var file in selectedFiles)
+        {
+            Stream stream = file.OpenReadStream();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
+
+            UploadedFile uploadedFile = new UploadedFile();
+            uploadedFile.FileName = file.Name;
+            uploadedFile.FileContent = ms.ToArray();
+            ms.Close();
+            Subject.File = uploadedFile;
+            await Http.PostAsJsonAsync("api/Subjects", Subject);
+        }
+        DisplayMessage = "Save subject successfully!";
+        Navigate.NavigateTo("Subject/Display");
+        this.StateHasChanged();
+    }
+}
+

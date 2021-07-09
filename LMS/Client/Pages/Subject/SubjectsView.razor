@@ -1,0 +1,74 @@
+﻿@page "/Subjects/View/{id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@using LMS.Shared.Models;
+@inject NavigationManager Navigate
+@inject HttpClient Http
+@inject IJSRuntime js
+
+
+
+@if (Subjects == null)
+{
+<div class="spinner"></div>
+}
+else
+{
+    <div class="row">
+        <div class="col-xs-1 col-sm-1 col-md-1 text-left">
+            <a href="/grades/view"> <img src="/images/back.png" width="30" /></a>
+        </div>
+        <div class="col-xs-10 col-sm-10 col-md-10">
+            <div class="text-center" style="padding: 10px; font-family: 'Helvetica Neue', sans-serif; font-size: 23px; letter-spacing: 1px; line-height: 1; text-align: center;">Select Subject - @Subjects.Where(a => a.GradeId == Id).Select(a => a.Grade.Name).First()</div>
+        </div>
+    </div>
+    <div class="text-left">                
+        <div class="text-right" style="font-family: 'Helvetica Neue', sans-serif;color:firebrick;font-size:11px;margin:0; letter-spacing: 1px;">Home -> @Subjects.Where(a => a.GradeId == Id).Select(a => a.Grade.Name).First()</div>
+    </div>
+    <hr style="height: 2px; background-color: #09db94;margin-top:0" />
+    var counter = 0;
+    <div class="container">
+        <div class="row">
+            @foreach (var subject in Subjects.Where(a => a.GradeId == Id))
+            {
+                <div class="col-xl-3 col-sm-6 col-12 mt-4 text-center" @onclick="( () => ViewSubject(subject.SubjectId))">
+                    <img src="@subject.ImagePath" width="@WidthCode[counter]" height="@HeightCode[counter]" style="cursor:pointer" />
+                </div>
+                counter++;
+            }
+        </div>
+        @{
+            if (Subjects.Count() == 0)
+            {
+                <h3>Coming soon...</h3>
+            }
+        }
+    </div>
+}
+
+
+@code
+{
+    [Parameter] public int Id { get; set; }
+    private IEnumerable<Subject> Subjects;
+    public List<string> WidthCode = new List<string>() { "130", "170", "115", "155", "110" };
+    public List<string> HeightCode = new List<string>() { "130", "130", "130", "130", "130" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Subjects = await Http.GetFromJsonAsync<List<Subject>>("api/Subjects");
+        }
+        catch (AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public void ViewSubject(int id)
+    {
+        Navigate.NavigateTo($"Chapters/View/{id}/{Id}");
+    }
+}

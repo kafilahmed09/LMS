@@ -1,0 +1,49 @@
+﻿@page "/district/Update/{id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@using LMS.Shared.Models
+@inject HttpClient Http
+@using System.Net.Http
+@inject NavigationManager Navigate
+
+<h3>Update District</h3>
+<hr />
+
+<EditForm Model="@district">
+    <div class="row">
+        <div class="col-10">
+            <div class="form-group">
+                <label>Category Name</label>
+                <input type="text" class="form-control" id="txtCN" @bind-value="district.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="UpdateDistrictBtn">Update District</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    public District district = new District();
+    [Parameter] public int Id { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            district = await Http.GetFromJsonAsync<District>($"api/Districts/{Id}");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task UpdateDistrictBtn()
+    {
+        await Http.PutAsJsonAsync($"api/Districts/{Id}", district);
+        Navigate.NavigateTo("District/Display");
+    }
+}

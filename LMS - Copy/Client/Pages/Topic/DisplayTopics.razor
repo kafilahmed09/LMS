@@ -1,0 +1,83 @@
+﻿@page "/Topic/Display/{id:int}/{key:int}/{pre:int}/{lst:int}"
+@using LMS.Shared.Models;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject NavigationManager Navigate
+@inject HttpClient Http
+<h1>List of Topics</h1>
+
+@if (Topics == null)
+{
+<div class="spinner"></div>
+}
+else
+{
+ <div class="row">
+     <div class="col-xs-1 col-sm-1 col-md-1 text-left">
+         <a href="/video/display/@key/@pre/@lst"> <img src="/images/back.png" width="30" /></a>
+     </div>
+     <div class="col-xs-10 col-sm-10 col-md-10">
+         <div class="text-right"><button class="btn btn-info" @onclick="CreateTopic">Add Topic</button></div>
+     </div>
+ </div>
+ <div class="table-responsive">
+     <table class="table text-left">
+         <thead>
+             <tr>
+                 <th>Topic</th>                                                                                
+             </tr>
+         </thead>
+         <tbody>
+             @foreach (var Topic in Topics)
+             {
+                 <tr>
+                     <td>@Topic.Name</td>                                                             
+                     <td><button class="btn btn-info" @onclick="( () => UpdateTopic(Topic.TopicId))">Edit</button></td>
+                     <td><button class="btn btn-warning" @onclick="( () => DeleteTopic(Topic.TopicId))">delete</button></td>
+                 </tr>
+             }
+         </tbody>
+     </table>
+ </div>
+}
+
+@code {
+    private IEnumerable<Topic> Topics;
+    [Parameter] public int Id { get; set; }
+    [Parameter] public int key { get; set; }
+    [Parameter] public int pre { get; set; }
+    [Parameter] public int lst { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Topics = await Http.GetFromJsonAsync<List<Topic>>("api/Topics");
+            Topics = Topics.Where(a=>a.VideoId == Id);
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task DeleteTopic(int id)
+    {
+        await Http.DeleteAsync($"api/Topics/{id}");
+        Topics = await Http.GetFromJsonAsync<List<Topic>>("api/Topics");
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    } 
+
+    public void UpdateTopic(int id)
+    {
+        Navigate.NavigateTo($"Topic/Update/{id}/{Id}/{key}");
+    }
+
+    public void CreateTopic()
+    {
+        Navigate.NavigateTo($"Topic/Add/{Id}/{key}/{pre}/{lst}");
+    }
+}

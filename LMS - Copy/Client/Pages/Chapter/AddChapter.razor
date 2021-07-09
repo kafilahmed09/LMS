@@ -1,0 +1,101 @@
+﻿@page "/Chapter/Add"
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager Navigate
+@using System.Net.Http
+
+<h3>Add Chapter</h3>
+<hr />
+
+@if (DisplayMessage != null)
+{
+    <span class="alert-info">@DisplayMessage</span>
+}
+
+<EditForm Model="@Chapter">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <select @onchange="@GradeClicked" class="form-control">
+                    <option value="">-- Select Grade --</option>
+                    @foreach (var grade in grades)
+                    {
+                        <option value="@grade.GradeId">@grade.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-control" @onchange="@subjectClicked">
+                <option value="">-- Select Subject --</option>
+                @if (subjectList != null)
+                {
+                    @foreach (var subject in subjectList.Where(a=>a.GradeId.ToString() == gradeId))
+                    {
+                        <option value="@subject.SubjectId">@subject.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Chapter Name</label>
+                <input type="text" class="form-control" @bind-value="Chapter.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="SaveChapter">Save Chapter</button>
+                @*<NavLink href="DisplayCategories" class="btn btn-info">Back to list</NavLink>*@
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    public string DisplayMessage;
+    private List<Grade> grades = new List<Grade>();
+    public Chapter Chapter = new Chapter();
+    List<Subject> subjectList = new List<Subject>();
+
+    string gradeId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            grades = await Http.GetFromJsonAsync<List<Grade>>("api/Grades");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task SaveChapter()
+    {
+        await Http.PostAsJsonAsync("api/Chapters", Chapter);
+        DisplayMessage = "Save ditrict successfully!";
+        Navigate.NavigateTo("Chapter/Display");
+    }
+
+    public async Task GradeClicked(ChangeEventArgs gradeEvent)
+    {
+        subjectList.Clear();
+
+        gradeId = gradeEvent.Value.ToString();
+        subjectList = await Http.GetFromJsonAsync<List<Subject>>($"api/Subjects");
+        this.StateHasChanged();
+    }
+
+    public void subjectClicked(ChangeEventArgs subjectEvent)
+    {
+        Chapter.SubjectId = int.Parse(subjectEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+
+}

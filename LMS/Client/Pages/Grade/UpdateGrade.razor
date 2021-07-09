@@ -1,0 +1,71 @@
+﻿@page "/Grade/Update/{id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@using LMS.Shared.Models
+@inject HttpClient Http
+@using System.Net.Http
+@inject NavigationManager Navigate
+
+<h3>Update Grade</h3>
+<hr />
+
+<EditForm Model="@Grade">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Grade Name</label>
+                <input type="text" class="form-control" @bind-value="Grade.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="UpdateGradeBtn">Update Grade</button>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Select Level</label>
+                <select @onchange="@SchoolLevelClicked" class="form-control" value="@defaultSchoolLevelValue">
+                    @foreach (var level in schoollevels)
+                    {
+                        <option value="@level.SchoolLevelId">@level.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    public Grade Grade = new Grade();
+    private List<SchoolLevel> schoollevels = new List<SchoolLevel>();
+    [Parameter] public int Id { get; set; }
+    public string defaultSchoolLevelValue = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Grade = await Http.GetFromJsonAsync<Grade>($"api/Grades/{Id}");
+            schoollevels = await Http.GetFromJsonAsync<List<SchoolLevel>>("api/SchoolLevels");
+            defaultSchoolLevelValue = Grade.SchoolLevelId.ToString();
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task UpdateGradeBtn()
+    {
+        await Http.PutAsJsonAsync($"api/Grades/{Id}", Grade);
+        Navigate.NavigateTo("Grade/Display");
+    }
+
+    public void SchoolLevelClicked(ChangeEventArgs schoolLevelEvent)
+    {
+        Grade.SchoolLevelId = int.Parse(schoolLevelEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+}

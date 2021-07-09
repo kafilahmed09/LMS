@@ -1,0 +1,88 @@
+﻿@page "/Subject/Display/{id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@using LMS.Shared.Models;
+@inject NavigationManager Navigate
+@inject HttpClient Http
+<h1>List of Subjects</h1>
+
+@if (Subjects == null)
+{
+<div class="spinner"></div>
+}
+else
+{
+ <div class="row">
+     <div class="col-xs-1 col-sm-1 col-md-1 text-left">
+         <a href="/grade/display"> <img src="/images/back.png" width="30" /></a>
+     </div>
+     <div class="col-xs-11 col-sm-11 col-md-11 text-right">
+         <div class="text-right"><button class="btn btn-info" @onclick="CreateSubject">Add Subject</button></div>
+     </div>
+ </div>
+ <div class="table-responsive">
+     <table class="table">
+         <thead>
+             <tr>
+                 <th>Grade</th>
+                 <th>Subject</th>
+                 <th>Chapters</th>
+             </tr>
+         </thead>
+         <tbody>
+             @foreach (var Subject in Subjects)
+             {
+                 <tr>
+                     <td>@Subject.Grade.Name</td>
+                     <td>@Subject.Name</td>
+                     <td><button class="btn btn-success" @onclick="( () => ViewChapters(Subject.SubjectId))">View Chapters</button></td>
+                     <td><button class="btn btn-info" @onclick="( () => UpdateSubject(Subject.SubjectId))">Edit</button></td>
+                     <td><button class="btn btn-warning" @onclick="( () => DeleteSubject(Subject.SubjectId))">delete</button></td>
+                 </tr>
+             }
+         </tbody>
+     </table>
+ </div>
+}
+
+@code {
+    private IEnumerable<Subject> Subjects;
+    [Parameter] public int Id { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Subjects = await Http.GetFromJsonAsync<List<Subject>>("api/Subjects");
+            Subjects = Subjects.Where(a=>a.GradeId == Id);
+        }
+        catch (AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task DeleteSubject(int id)
+    {
+        await Http.DeleteAsync($"api/SubjectRemove/{id}");
+        Subjects = await Http.GetFromJsonAsync<List<Subject>>("api/Subjects");
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void UpdateSubject(int id)
+    {
+        Navigate.NavigateTo($"Subject/Update/{id}");
+    }
+
+    public void CreateSubject()
+    {
+        Navigate.NavigateTo($"Subject/Add");
+    }
+    public void ViewChapters(int id)
+    {
+        Navigate.NavigateTo($"Chapter/Display/{id}/{Id}");
+    }
+}

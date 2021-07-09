@@ -1,0 +1,71 @@
+﻿@page "/Tehsil/create"
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager Navigate
+@using System.Net.Http
+
+<h3>Create Tehsil</h3>
+<hr />
+
+@if (DisplayMessage != null)
+{
+    <span class="alert-info">@DisplayMessage</span>
+}
+
+<EditForm Model="@Tehsil">
+    <div class="row">
+        <div class="col-10">
+            <div class="form-group">
+                <select @onchange="@DistrictClicked" class="form-control">
+                    <option value="">-- Select District --</option>
+                    @foreach (var district in districts)
+                    {
+                        <option value="@district.DistrictId">@district.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tehsil Name</label>
+                <input type="text" class="form-control" id="txtCN" @bind-value="Tehsil.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="CreateTehsilBtn">Create Tehsil</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    public string DisplayMessage;
+    private List<District> districts = new List<District>();
+    public Tehsil Tehsil = new Tehsil();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            districts = await Http.GetFromJsonAsync<List<District>>("api/Districts");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task CreateTehsilBtn()
+    {
+        await Http.PostAsJsonAsync("api/TehsilCreate", Tehsil);
+        DisplayMessage = "Save ditrict successfully!";
+        Navigate.NavigateTo("Tehsil/Display");
+    }
+
+    public void DistrictClicked(ChangeEventArgs districtEvent)
+    {
+        Tehsil.DistrictId = int.Parse(districtEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+}

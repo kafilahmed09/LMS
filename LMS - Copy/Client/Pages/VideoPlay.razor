@@ -1,0 +1,22 @@
+﻿@inject IModalService ModalService
+<style>
+    .blazored-modal-header
+    {
+        padding:0;
+        padding-left:5px;      
+        height:27px;
+    }
+    .blazored-modal
+    {
+        padding: 3px;
+    }
+    .blazored-modal-title{
+        font-size:16px;
+    }
+</style>
+@*<iframe width="560" height="315" src="@VideoLink"  frameborder="0" allowfullscreen></iframe>*@
+<iframe width="560" height="315" src="@VLink" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+@code {
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+    [Parameter] public string VLink { get; set; }
+}

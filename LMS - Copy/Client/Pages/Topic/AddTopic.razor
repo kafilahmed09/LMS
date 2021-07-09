@@ -1,0 +1,95 @@
+﻿@page "/Topic/Add/{id:int}/{pre:int}/{cen:int}/{nxt:int}"
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager Navigate
+@using System.Net.Http
+
+<h3>Add Topic</h3>
+<hr />
+
+@if (DisplayMessage != null)
+{
+<span class="alert-info">@DisplayMessage</span>
+}
+
+<EditForm Model="@Topic">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="form-group">
+                <input type="text" class="form-control" value="@GradeName" readonly="readonly" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" value="@SubjectName" readonly="readonly" />
+        </div>
+        <div class="col-md-5">
+            <input type="text" class="form-control" value="@ChapterName" readonly="readonly" />
+        </div>
+        <div class="col-md-2">
+            <input type="text" class="form-control" value="@VideoName" readonly="readonly" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Topic Name</label>
+                <input type="text" class="form-control" @bind-value="Topic.Name" />
+            </div>           
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Serial no</label>
+                <input type="number" class="form-control" @bind-value="Topic.SerialNo" />
+            </div>            
+        </div>        
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group text-left">
+                <button class="btn btn-primary" type="submit" @onclick="SaveTopic">Save Topic</button>
+                <a href="/Topic/Display/@Id/@pre/@cen/@nxt" class="btn btn-info">Back to list</a>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    public string DisplayMessage;
+    public string ChapterName;
+    public string SubjectName;
+    public string GradeName;
+    public string VideoName;
+    [Parameter] public int Id { get; set; }
+    [Parameter] public int pre { get; set; }
+    [Parameter] public int cen { get; set; }
+    [Parameter] public int nxt { get; set; }
+    public Topic Topic = new Topic();
+    public Video video = new Video();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            video = await Http.GetFromJsonAsync<Video>($"api/Videos/{Id}");
+            Topic.VideoId = video.VideoId;
+            VideoName = video.Name + "#" + video.SerialNo;
+            ChapterName = video.Chapter.Name;
+            SubjectName = video.Chapter.Subject.Name;
+            GradeName = video.Chapter.Subject.Grade.Name;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task SaveTopic()
+    {
+        await Http.PostAsJsonAsync("api/Topics", Topic);
+        Navigate.NavigateTo($"Topic/Display/{Id}/{pre}/{cen}/{nxt}");
+    }
+}

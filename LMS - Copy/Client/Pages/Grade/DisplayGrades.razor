@@ -1,0 +1,82 @@
+﻿@page "/Grade/Display"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@using LMS.Shared.Models;
+@inject NavigationManager Navigate
+@inject HttpClient Http
+@inject IJSRuntime js
+<h1>List of Grades</h1>
+
+@if (Grades == null)
+{
+<div class="spinner"></div>
+}
+else
+{<div class="text-right"><button class="btn btn-info" @onclick="CreateGrade">Add Grade</button></div>
+ <div class="table-responsive">
+     <table class="table">
+         <thead>
+             <tr>
+                 <th>Name</th>
+                 <th>Level</th>
+                 <th>Subjects</th>
+             </tr>
+         </thead>
+         <tbody>
+             @foreach (var Grade in Grades)
+             {
+                 <tr>
+                     <td>@Grade.Name</td>
+                     <td>@Grade.SchoolLevel.Name</td>
+                     <td><button class="btn btn-info" @onclick="( () => ViewSubjects(Grade.GradeId))">View</button></td>
+                     <td><button class="btn btn-info" @onclick="( () => UpdateGrade(Grade.GradeId))">Edit</button></td>
+                     <td><button class="btn btn-warning" @onclick="( () => DeleteGrade(Grade.GradeId))">delete</button></td>
+                 </tr>
+             }
+         </tbody>
+     </table>
+ </div>
+}
+
+@code {
+    private IEnumerable<Grade> Grades;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Grades = await Http.GetFromJsonAsync<List<Grade>>("api/Grades");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task DeleteGrade(int id)
+    {
+        var gradeSelected = Grades.First(a => a.GradeId == id).Name;
+        if (await js.InvokeAsync<bool>("confirm", $"Are you sure, you want to delete {gradeSelected}?"))
+            await Http.DeleteAsync($"api/Grades/{id}");
+        Grades = await Http.GetFromJsonAsync<List<Grade>>("api/Grades");
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void UpdateGrade(int id)
+    {
+        Navigate.NavigateTo($"Grade/Update/{id}");
+    }
+    public void ViewSubjects(int id)
+    {
+        Navigate.NavigateTo($"Subject/Display/{id}");
+    }
+
+    public void CreateGrade()
+    {
+        Navigate.NavigateTo($"Grade/Add");
+    }
+}

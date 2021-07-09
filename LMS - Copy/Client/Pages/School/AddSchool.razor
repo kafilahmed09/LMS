@@ -1,0 +1,158 @@
+﻿@page "/School/add"
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager Navigate
+@using System.Net.Http
+
+<h3>Create School</h3>
+<hr />
+
+@if (DisplayMessage != null)
+{
+    <span class="alert-info">@DisplayMessage</span>
+}
+
+<EditForm Model="@School">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <select @onchange="@DistrictClicked" class="form-control">
+                    <option value="">-- Select District --</option>
+                    @foreach (var district in districts)
+                    {
+                        <option value="@district.DistrictId">@district.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-control" @onchange="@TehsilClicked">
+                <option value="">-- Select Tehsil --</option>
+                @if (tehsilList != null)
+                {
+                    @foreach (var tehsil in tehsilList)
+                    {
+                        <option value="@tehsil.TehsilId">@tehsil.Name</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <select class="form-control" @onchange="@unionCouncilClicked">
+                <option value="">-- Select Union Council --</option>
+                @if (unioncouncilList != null)
+                {
+                    @foreach (var uc in unioncouncilList)
+                    {
+                        <option value="@uc.UnionCouncilId">@uc.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>School Name</label>
+                <input type="text" class="form-control" @bind-value="School.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="SaveSchool">Save School</button>
+                @*<NavLink href="DisplayCategories" class="btn btn-info">Back to list</NavLink>*@
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Select Level</label>
+                <select @onchange="@SchoolLevelClicked" class="form-control">                    
+                    @foreach (var level in schoollevels)
+                    {
+                        <option value="@level.SchoolLevelId">@level.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Select Gander</label>
+                <select @onchange="@GanderClicked" class="form-control">                    
+                    @foreach (var gander in ganders)
+                    {
+                        <option value="@gander.GanderlId">@gander.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>BEMIS Code</label>
+                <input type="text" class="form-control" @bind-value="School.BEMIS" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    public string DisplayMessage;
+    private List<District> districts = new List<District>();
+    private List<SchoolLevel> schoollevels = new List<SchoolLevel>();
+    private List<Gander> ganders = new List<Gander>();
+    public School School = new School();
+    List<Tehsil> tehsilList = new List<Tehsil>();
+    List<UnionCouncil> unioncouncilList = new List<UnionCouncil>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            districts = await Http.GetFromJsonAsync<List<District>>("api/Districts");
+            schoollevels = await Http.GetFromJsonAsync<List<SchoolLevel>>("api/SchoolLevels");
+            ganders = await Http.GetFromJsonAsync<List<Gander>>("api/Ganders");
+            School.GanderId = ganders.Select(a => a.GanderlId).FirstOrDefault();
+            School.SchoolLevelId = schoollevels.Select(a => a.SchoolLevelId).FirstOrDefault();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task SaveSchool()
+    {
+        await Http.PostAsJsonAsync("api/Schools", School);
+        DisplayMessage = "Save ditrict successfully!";
+        Navigate.NavigateTo("School/Display");
+    }
+
+    public async Task DistrictClicked(ChangeEventArgs districtEvent)
+    {
+        tehsilList.Clear();        
+        tehsilList = await Http.GetFromJsonAsync<List<Tehsil>>($"api/TehsilsOfDistrict/{districtEvent.Value.ToString()}");
+        this.StateHasChanged();
+    }
+    public async Task TehsilClicked(ChangeEventArgs tehsilEvent)
+    {
+        unioncouncilList.Clear();
+        unioncouncilList = await Http.GetFromJsonAsync<List<UnionCouncil>>($"api/UnioncouncilsOfTehsil/{tehsilEvent.Value.ToString()}");
+        this.StateHasChanged();
+    }
+    public void unionCouncilClicked(ChangeEventArgs unioncouncilEvent)
+    {
+        School.UnionCouncilId = int.Parse(unioncouncilEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+    public void SchoolLevelClicked(ChangeEventArgs schoolLevelEvent)
+    {
+        School.SchoolLevelId = int.Parse(schoolLevelEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+    public void GanderClicked(ChangeEventArgs ganderEvent)
+    {
+        School.GanderId = int.Parse(ganderEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+}

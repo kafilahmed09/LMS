@@ -1,0 +1,69 @@
+﻿@page "/district/Display"
+@using LMS.Shared.Models;
+@inject NavigationManager Navigate
+@inject HttpClient Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+<h1>List of Districts</h1>
+
+@if (districts == null)
+{
+<div class="spinner"></div>
+}
+else
+{<div class="text-right"><button class="btn btn-info" @onclick="CreateDistrict">Add District</button></div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var district in districts)
+            {
+                <tr>
+                    <td>@district.Name</td>
+                    <td><button class="btn btn-info" @onclick="( () => UpdateDistrict(district.DistrictId))">Edit</button></td>
+                    <td><button class="btn btn-warning" @onclick="( () => DeleteDistrict(district.DistrictId))">delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<District> districts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            districts = await Http.GetFromJsonAsync<List<District>>("api/Districts");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task DeleteDistrict(int id)
+    {
+        await Http.DeleteAsync($"api/Districts/{id}");
+        districts = await Http.GetFromJsonAsync<List<District>>("api/Districts");
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void UpdateDistrict(int id)
+    {
+        Navigate.NavigateTo($"District/Update/{id}");
+    }
+
+    public void CreateDistrict()
+    {
+        Navigate.NavigateTo($"District/Create");
+    }
+}

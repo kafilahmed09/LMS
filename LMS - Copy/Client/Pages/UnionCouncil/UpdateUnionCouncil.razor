@@ -1,0 +1,101 @@
+﻿@page "/UnionCouncil/Update/{id:int}"
+
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@using System.Net.Http
+@inject NavigationManager Navigate
+
+<h3>Update UnionCouncil</h3>
+<hr />
+
+<EditForm Model="@UnionCouncil">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <select @onchange="@DistrictClicked" class="form-control" value="@defaultValueDistrict">                    
+                    @foreach (var district in districts)
+                    {
+                        <option value="@district.DistrictId">@district.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-control" @onchange="@tehsilClicked" value="@defaultValueTehsil">                
+                @if (tehsils != null)
+                {
+                    @foreach (var tehsil in tehsils)
+                    {
+                        <option value="@tehsil.TehsilId">@tehsil.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>UnionCouncil Name</label>
+                <input type="text" class="form-control" @bind-value="UnionCouncil.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="UpdateUnionCouncilBtn">Update Union Council</button>
+                @*<NavLink href="DisplayCategories" class="btn btn-info">Back to list</NavLink>*@
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    public UnionCouncil UnionCouncil = new UnionCouncil();
+    [Parameter] public int Id { get; set; }
+    private List<District> districts = new List<District>();
+    List<Tehsil> tehsils = new List<Tehsil>();
+    string districtId { get; set; }
+    string defaultValueDistrict = "";
+    string defaultValueTehsil = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            UnionCouncil = await Http.GetFromJsonAsync<UnionCouncil>($"api/UnionCouncilGet/{Id}");
+
+            districts = await Http.GetFromJsonAsync<List<District>>("api/districts");
+            tehsils = await Http.GetFromJsonAsync<List<Tehsil>>($"api/TehsilsOfDistrict/{UnionCouncil.Tehsil.DistrictId}");
+            
+            defaultValueDistrict = UnionCouncil.Tehsil.DistrictId.ToString();
+            defaultValueTehsil = UnionCouncil.TehsilId.ToString();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task UpdateUnionCouncilBtn()
+    {
+        await Http.PutAsJsonAsync($"api/UnionCouncilUpdate/{Id}", UnionCouncil);
+        Navigate.NavigateTo("UnionCouncil/Display");
+    }
+
+    public async Task DistrictClicked(ChangeEventArgs districtEvent)
+    {
+        tehsils.Clear();
+
+        districtId = districtEvent.Value.ToString();
+        tehsils = await Http.GetFromJsonAsync<List<Tehsil>>($"api/TehsilsOfDistrict/{districtId}");
+        this.StateHasChanged();
+    }
+
+    public void tehsilClicked(ChangeEventArgs tehsilEvent)
+    {
+        UnionCouncil.TehsilId = int.Parse(tehsilEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+}

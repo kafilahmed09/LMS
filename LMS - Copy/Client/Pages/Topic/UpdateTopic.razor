@@ -1,0 +1,88 @@
+﻿@page "/Topic/Update/{id:int}/{preId:int}/{key:int}"
+
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@using System.Net.Http
+@inject NavigationManager Navigate
+
+<h3>Update Topic</h3>
+<hr />
+
+<EditForm Model="@Topic">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="form-group">
+                <input type="text" class="form-control" value="@GradeName" readonly="readonly" />
+            </div>
+        </div>
+        <div class="col-md-2">
+            <input type="text" class="form-control" value="@SubjectName" readonly="readonly" />
+        </div>
+        <div class="col-md-6">
+            <input type="text" class="form-control" value="@ChapterName" readonly="readonly" />
+        </div>
+        <div class="col-md-2">
+            <input type="text" class="form-control" value="@VideoName" readonly="readonly" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Topic Name</label>
+                <input type="text" class="form-control" @bind-value="Topic.Name" />
+            </div>            
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Serial no</label>
+                <input type="number" class="form-control" @bind-value="Topic.SerialNo" />
+            </div>
+        </div>        
+    </div>
+    <div class="row text-left">
+        <div class="col-md-4">
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="UpdateTopicBtn">Update Topic</button>                
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    public Topic Topic = new Topic();
+    [Parameter] public int Id { get; set; }
+    [Parameter] public int key { get; set; }
+    [Parameter] public int preId { get; set; }
+    public string GradeName;
+    public string SubjectName;
+    public string ChapterName;
+    public string VideoName;    
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Topic = await Http.GetFromJsonAsync<Topic>($"api/Topics/{Id}");
+
+            GradeName = Topic.Video.Chapter.Subject.Grade.Name;
+            SubjectName = Topic.Video.Chapter.Subject.Name;
+            ChapterName = Topic.Video.Chapter.Name;
+            VideoName = Topic.Video.Name;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task UpdateTopicBtn()
+    {
+        await Http.PutAsJsonAsync($"api/Topics/{Id}", Topic);
+        Navigate.NavigateTo($"Topic/Display/{preId}/{key}");
+    }
+}

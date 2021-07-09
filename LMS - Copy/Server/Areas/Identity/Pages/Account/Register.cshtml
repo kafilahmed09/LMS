@@ -1,0 +1,137 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = "/pages/Shared/_LayoutLogin.cshtml";
+}
+<link rel="stylesheet" href="~/template/fonts/material-icon/css/material-design-iconic-font.min.css">
+<!-- Main css -->
+<link rel="stylesheet" href="~/template/css/style.css">
+<style>
+    .form-group {
+        margin-bottom: 10px;
+    }
+    select {
+        /* for Firefox */
+        -moz-appearance: none;
+        /* for Chrome */
+        -webkit-appearance: none;
+    }
+</style>
+<div class="">
+        <section class="signup">
+            <div class="container">
+                <div class="signup-content">
+
+                    <div class="signup-form">
+                        <h2 class="form-title"><img src="~/template/images/lms-logo.png" /></h2>
+                        <form asp-route-returnUrl="@Model.ReturnUrl" method="post" class="register-form" id="register-form">
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                            @* <div class="form-group">
+                    <label for="name"><i class="zmdi zmdi-account material-icons-name"></i></label>
+                    <input asp-for="Input.UserName" type="text" placeholder="Your Name" />
+                    <span asp-validation-for="Input.UserName" class="text-danger"></span>
+                </div>*@
+                            <div class="form-group">
+                                <label for="email"><i class="zmdi zmdi-email"></i></label>
+                                <input asp-for="Input.Email" type="email" placeholder="Your Email" />
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+                            @*<div class="form-group">
+                    <label for="pass"><i class="zmdi zmdi-lock"></i></label>
+                    <input asp-for="Input.Password" type="password" placeholder="Password" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label for="re-pass"><i class="zmdi zmdi-lock-outline"></i></label>
+                    <input asp-for="Input.ConfirmPassword" type="password" placeholder="Repeat your password" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>*@
+                            <div class="form-group">
+                                <p>Select Your District</p>
+                            </div>
+                            <div class="form-group">
+                                <select id="ddlDistrict" asp-for="Input.DistrictId" asp-items="ViewBag.ddlDistrict" class="form-control"></select>
+                                <span asp-validation-for="Input.DistrictId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <input type="radio" checked="checked" value="4" name="school" class="form-check-input"><p>Collage</p>
+                            </div>
+                            <div class="form-group">
+                                <input type="radio" class="form-check-input" value="3" name="school"> <p>School</p>
+                            </div>
+                            <div class="form-group">
+                                <p>Select Your School/Collage</p>
+                            </div>
+                            <div class="form-group">
+                                <select id="ddlSchool" asp-for="Input.SchoolId" class="form-control" asp-items="ViewBag.ddlSchool"></select>
+                                <span asp-validation-for="Input.SchoolId" class="text-danger"></span>
+                            </div>
+                            <div class="form-group form-button">
+                                <input type="submit" name="signup" id="signup" class="form-submit" value="Register" />
+                            </div>
+                        </form>
+                    </div>
+                    <div class="signup-image">
+                        <figure><img src="~/template/images/signup-image.jpg" alt="sing up image"></figure>
+                        <a asp-area="Identity" asp-page="/Account/Login" class="signup-image-link">I am already member</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/template/js/main.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $("input[type='radio']").on('change', function () {                
+                var selectedValue = $("input[name='school']:checked").val();
+                if (selectedValue) {
+                    fill(selectedValue);
+                }
+            });
+        });
+
+        @*$("#ddlDistrict").change(function () {
+        $("#ddlSchool").empty();
+        $.ajax({
+            url: 'https://localhost:44383/Identity/Account/filter',
+        dataType: 'json',
+        data: { id: $("#ddlDistrict").val() },
+            success: function (schools) {
+                var items = '';
+                $.each(data, function (i, employee) {
+                    items += "<option value='" + employee.value + "'>" + employee.text + "</option>";
+                });
+                $("#SupervisorID").html(items);
+        },
+        error: function (ex) {
+            alert('Failed to retrieve Sub Categories : ' + ex);
+        }
+    });
+        });*@
+
+        $('#ddlDistrict').change(function () {
+            var selectedValue = $("input[name='school']:checked").val();
+            fill(selectedValue);
+        });
+
+        function fill(schoollevel) {
+            var url = '/Identity/Account/filter';
+            var ddlsource = "#ddlDistrict";
+            $.getJSON(url, { id: $(ddlsource).val(), schoolLevel: schoollevel }, function (data) {
+                var items = '';
+                $("#ddlSchool").empty();
+                $.each(data, function (i, school) {
+                    items += "<option value='" + school.value + "'>" + school.text + "</option>";
+                });
+                $("#ddlSchool").html(items);
+            });
+        }
+
+    </script>
+}

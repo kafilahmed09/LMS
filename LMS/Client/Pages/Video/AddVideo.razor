@@ -1,0 +1,97 @@
+﻿@page "/Video/Add/{id:int}/{pre:int}/{key:int}"
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NavigationManager Navigate
+@using System.Net.Http
+
+<h3>Add Video</h3>
+<hr />
+
+@if (DisplayMessage != null)
+{
+<span class="alert-info">@DisplayMessage</span>
+}
+
+<EditForm Model="@Video">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="text" class="form-control" value="@GradeName" readonly="readonly"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <input type="text" class="form-control" value="@SubjectName" readonly="readonly"/>
+        </div>
+        <div class="col-md-4">
+            <input type="text" class="form-control" value="@ChapterName" readonly="readonly"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Video Name</label>
+                <input type="text" class="form-control" @bind-value="Video.Name" readonly="readonly" />
+            </div>            
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Video#</label>
+                <input type="text" class="form-control" @bind-value="Video.SerialNo" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Video Link</label>
+                <input type="text" class="form-control" @bind-value="Video.VideoLink" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 text-left">
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="SaveVideo">Save Video</button>
+                <a href="/video/display/@Id/@pre/@key" class="btn btn-info">Back to list</a>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    public string DisplayMessage;
+    public string ChapterName;
+    public string SubjectName;
+    public string GradeName;
+    [Parameter] public int Id { get; set; }    
+    [Parameter] public int pre { get; set; }    
+    [Parameter] public int key { get; set; }    
+    public Video Video = new Video();
+    public Chapter chapter = new Chapter();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            chapter = await Http.GetFromJsonAsync<Chapter>($"api/Chapters/{Id}");
+            Video.ChapterId = Id;
+            Video.Name = "Lecture";
+            ChapterName = chapter.Name;
+            SubjectName = chapter.Subject.Name;
+            GradeName = chapter.Subject.Grade.Name;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task SaveVideo()
+    {
+        await Http.PostAsJsonAsync("api/Videos", Video);
+        DisplayMessage = "Save ditrict successfully!";
+        Navigate.NavigateTo($"Video/Display/{Id}/{pre}/{key}");
+    }    
+}

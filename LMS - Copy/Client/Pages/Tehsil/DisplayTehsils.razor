@@ -1,0 +1,71 @@
+﻿@page "/Tehsil/Display"
+@using LMS.Shared.Models;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject NavigationManager Navigate
+@inject HttpClient Http
+<h1>List of Tehsils</h1>
+
+@if (Tehsils == null)
+{
+<div class="spinner"></div>
+}
+else
+{<div class="text-right"><button class="btn btn-info" @onclick="CreateTehsil">Create New Category</button></div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>District</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Tehsil in Tehsils)
+            {
+                <tr>
+                    <td>@Tehsil.Name</td>
+                    <td>@Tehsil.District.Name</td>
+                    <td><button class="btn btn-info" @onclick="( () => UpdateTehsil(Tehsil.TehsilId))">Edit</button></td>
+                    <td><button class="btn btn-warning" @onclick="( () => DeleteTehsil(Tehsil.TehsilId))">delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<Tehsil> Tehsils;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Tehsils = await Http.GetFromJsonAsync<List<Tehsil>>("api/Tehsils");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task DeleteTehsil(int id)
+    {
+        await Http.DeleteAsync($"api/TehsilRemove/{id}");
+        Tehsils = await Http.GetFromJsonAsync<List<Tehsil>>("api/Tehsils");
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void UpdateTehsil(int id)
+    {
+        Navigate.NavigateTo($"Tehsil/Update/{id}");
+    }
+
+    public void CreateTehsil()
+    {
+        Navigate.NavigateTo($"Tehsil/Create");
+    }
+}

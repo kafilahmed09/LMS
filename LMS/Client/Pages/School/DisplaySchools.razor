@@ -1,0 +1,77 @@
+﻿@page "/School/Display"
+@using LMS.Shared.Models;
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject NavigationManager Navigate
+@inject HttpClient Http
+<h1>List of Schools</h1>
+
+@if (Schools == null)
+{
+<div class="spinner"></div>
+}
+else
+{<div class="text-right"><button class="btn btn-info" @onclick="CreateSchool">Add School</button></div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Level</th>
+                <th>BEMIS</th>
+                <th>Gander</th>
+                <th>District</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var School in Schools)
+            {
+                <tr>
+                    <td>@School.Name</td>
+                    <td>@School.SchoolLevel.Name</td>
+                    <td>@School.BEMIS</td>
+                    <td>@School.Gander.Name</td>
+                    <td>@School.UnionCouncil.Tehsil.District.Name</td>
+                    <td><button class="btn btn-info" @onclick="( () => UpdateSchool(School.SchoolId))">Edit</button></td>
+                    <td><button class="btn btn-warning" @onclick="( () => DeleteSchool(School.SchoolId))">delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<School> Schools;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Schools = await Http.GetFromJsonAsync<List<School>>("api/Schools");
+        }
+        catch(AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public async Task DeleteSchool(int id)
+    {
+        await Http.DeleteAsync($"api/Schools/{id}");
+        Schools = await Http.GetFromJsonAsync<List<School>>("api/Schools");
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void UpdateSchool(int id)
+    {
+        Navigate.NavigateTo($"School/Update/{id}");
+    }
+
+    public void CreateSchool()
+    {
+        Navigate.NavigateTo($"School/Add");
+    }
+}

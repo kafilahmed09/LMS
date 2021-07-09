@@ -1,0 +1,92 @@
+﻿@page "/Chapters/View/{id:int}/{key}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@using LMS.Shared.Models;
+@inject NavigationManager Navigate
+@inject HttpClient Http
+@inject IJSRuntime js
+
+
+
+@if (Chapters == null)
+{
+<div class="spinner"></div>
+}
+else
+{
+    <div class="row">
+        <div class="col-xs-1 col-sm-1 col-md-1 text-left">
+            <a href="/subjects/view/@Key"> <img src="/images/back.png" width="30" /></a>
+        </div>
+        <div class="col-xs-10 col-sm-10 col-md-10">
+            <div class="text-center" style="padding: 10px; font-family: 'Helvetica Neue', sans-serif; font-size: 23px; letter-spacing: 1px; line-height: 1; text-align: center;">Select Chapter - @Chapters.Where(a => a.SubjectId == Id).Select(a => a.Subject.Name).First()</div>
+        </div>
+    </div>
+    <div class="text-left">                
+        <div class="text-right" style="font-family: 'Helvetica Neue', sans-serif;color:firebrick;font-size:11px;margin:0; letter-spacing: 1px;">Home -> @Chapters.Where(a => a.SubjectId == Id).Select(a => a.Subject.Grade.Name).First() -> @Chapters.Where(a => a.SubjectId == Id).Select(a => a.Subject.Name).First()</div>
+    </div>
+    <hr style="height: 2px; background-color: #09db94;margin-top:0" />
+    <div class="container">
+        <div class="row">
+            @foreach (var Chapter in Chapters.Where(a => a.SubjectId == Id))
+            {
+            <div class="col-lg-4 col-xl-4 col-sm-6 col-12 mt-5 text-center" @onclick="( () => ViewChapter(Chapter.ChapterId))">
+                @{
+                    if (Chapter.SubjectId == 15 || Chapter.SubjectId == 20)
+                    {
+                        <img src="@Chapter.ImagePath" width="260" style="cursor:pointer" />
+                    }
+                    else if (Chapter.SubjectId == 5)
+                    {
+                        <img src="@Chapter.ImagePath" style="cursor:pointer" />
+                        <p style="cursor: pointer; background: #6f42c1; color: whitesmoke; border-radius: 5px;margin-top:4px">@Chapter.Name</p>
+                    }
+                    else if (Chapter.SubjectId == 10)
+                    {
+                        <img src="@Chapter.ImagePath" height="110" style="cursor:pointer" />
+                        <p style="cursor: pointer; background: rgba(0,255,255,0.8); border-radius: 5px; margin-top: 4px">@Chapter.Name</p>
+                    }
+                    else
+                    {
+                        <img src="@Chapter.ImagePath" width="100" style="cursor:pointer" />
+                        <p style="cursor:pointer">@Chapter.Name</p>
+                    }
+                }
+
+            </div>
+            }
+        </div>
+        @{
+            if (Chapters.Where(a=>a.SubjectId == Id).Count() == 0)
+            {
+                <h3>Coming soon...</h3>
+            }
+        }
+    </div>
+}
+
+
+@code
+{
+    [Parameter] public int Id { get; set; }
+    [Parameter] public string Key { get; set; }
+    private IEnumerable<Chapter> Chapters;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Chapters = await Http.GetFromJsonAsync<List<Chapter>>("api/Chapters");
+        }
+        catch (AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public void ViewChapter(int id)
+    {
+        Navigate.NavigateTo($"Videos/View/{id}/{Id}/{Key}");
+    }
+}

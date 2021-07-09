@@ -1,0 +1,79 @@
+﻿@page "/Videos/View/{id:int}/{key}/{back}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@using LMS.Shared.Models;
+@inject NavigationManager Navigate
+@inject HttpClient Http
+@inject IJSRuntime js
+@inject IModalService modal
+
+
+@if (Topics == null)
+{
+<div class="spinner"></div>
+}
+else
+{
+<div class="text-left">
+    <a href="/chapters/view/@Key/@back"> <img src="/images/back.png" width="30" /></a>
+    <div class="text-center" style="padding: 10px; font-family: 'Helvetica Neue', sans-serif; font-size: 23px; letter-spacing: 1px; line-height: 1; text-align: center;"> Chapter: @Topics.Select(a => a.Video.Chapter.Name).First()</div>
+    <div class="text-right" style="font-family: 'Helvetica Neue', sans-serif;color:firebrick;font-size:11px;margin:0; letter-spacing: 1px;">Home -> @Topics.Select(a => a.Video.Chapter.Subject.Grade.Name).First() -> @Topics.Select(a => a.Video.Chapter.Subject.Name).First()</div>
+</div>
+    <hr style="height: 2px; background-color: #09db94" />
+    <div class="container">
+        <div class="text-center">
+
+            @{ int vId = 0;}
+            @foreach (var topic in Topics)
+            {
+                if (vId != topic.VideoId)
+                {
+                    <div style="padding:5px" @onclick="@(() => ShowVideo(topic.Video.VideoLink, String.Concat(topic.Video.Chapter.Name, " [Lecture#",topic.Video.SerialNo, "]")))">
+                        <img src="/images/Subject/video.png" width="100" style="cursor:pointer" />
+                        <p>@String.Concat(topic.Video.Name, "#", topic.Video.SerialNo)</p>
+                    </div>
+                    vId = topic.VideoId;
+                }
+                <ul class="text-left">
+                    <li style="background-color:lavender;padding:3px">@topic.Name</li>
+                </ul>
+            }
+        </div>
+        @{
+            if (Topics.Count() == 0)
+            {
+                <h3>Coming soon...</h3>
+            }
+        }
+    </div>
+}
+
+@code
+{
+    [Parameter] public int Id { get; set; }
+    [Parameter] public string Key { get; set; }
+    [Parameter] public string back { get; set; }        
+    private IEnumerable<Topic> Topics;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Topics = await Http.GetFromJsonAsync<List<Topic>>("api/Topics");
+            Topics = Topics.Where(a => a.Video.ChapterId == Id).OrderBy(a=>a.VideoId);                        
+        }
+        catch (AccessTokenNotAvailableException e)
+        {
+            e.Redirect();
+        }
+    }
+
+    public void ShowVideo(string VLink, string CName)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add(nameof(VLink), VLink);
+
+        modal.Show<VideoPlay>(CName, parameters);
+    }
+}

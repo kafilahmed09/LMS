@@ -1,0 +1,101 @@
+﻿@page "/Chapter/Update/{id:int}"
+
+@using LMS.Shared.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+@inject HttpClient Http
+@using System.Net.Http
+@inject NavigationManager Navigate
+
+<h3>Update Chapter</h3>
+<hr />
+
+<EditForm Model="@Chapter">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <select @onchange="@GradeClicked" class="form-control" value="@defaultValueGrade">
+                    @foreach (var grade in grades)
+                    {
+                        <option value="@grade.GradeId">@grade.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="form-control" @onchange="@subjectClicked" value="@defaultValueSubject">
+                @if (subjects != null)
+                {
+                    @foreach (var subject in subjects.Where(a=>a.GradeId.ToString() == gradeId))
+                    {
+                        <option value="@subject.SubjectId">@subject.Name</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Chapter Name</label>
+                <input type="text" class="form-control" @bind-value="Chapter.Name" />
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" @onclick="UpdateChapterBtn">Update Chapter</button>
+                @*<NavLink href="DisplayCategories" class="btn btn-info">Back to list</NavLink>*@
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    public Chapter Chapter = new Chapter();
+    [Parameter] public int Id { get; set; }
+    private List<Grade> grades = new List<Grade>();
+    List<Subject> subjects = new List<Subject>();
+    string gradeId { get; set; }
+    string defaultValueGrade = "";
+    string defaultValueSubject = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Chapter = await Http.GetFromJsonAsync<Chapter>($"api/Chapters/{Id}");
+
+            grades = await Http.GetFromJsonAsync<List<Grade>>("api/Grades");
+            subjects = await Http.GetFromJsonAsync<List<Subject>>($"api/Subjects");
+            gradeId = Chapter.Subject.GradeId.ToString();
+            defaultValueGrade = Chapter.Subject.GradeId.ToString();
+            defaultValueSubject = Chapter.SubjectId.ToString();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task UpdateChapterBtn()
+    {
+        await Http.PutAsJsonAsync($"api/Chapters/{Id}", Chapter);
+        Navigate.NavigateTo("Chapter/Display");
+    }
+
+    public async Task GradeClicked(ChangeEventArgs gradeEvent)
+    {
+        subjects.Clear();
+
+        gradeId = gradeEvent.Value.ToString();
+        subjects = await Http.GetFromJsonAsync<List<Subject>>($"api/Subjects");
+        this.StateHasChanged();
+    }
+
+    public void subjectClicked(ChangeEventArgs subjectEvent)
+    {
+        Chapter.SubjectId = int.Parse(subjectEvent.Value.ToString());
+        this.StateHasChanged();
+    }
+}
