@@ -1,6 +1,63 @@
 ﻿@page "/"
 
 <style>
+
+    .title-word {
+  animation: color-animation 4s linear infinite;
+}
+
+.title-word-1 {
+  --color-1: #DF8453;
+  --color-2: #3D8DAE;
+  --color-3: #E4A9A8;
+}
+
+.title-word-2 {
+  --color-1: #DBAD4A;
+  --color-2: #ACCFCB;
+  --color-3: #17494D;
+}
+
+.title-word-3 {
+  --color-1: #ACCFCB;
+  --color-2: #E4A9A8;
+  --color-3: #ACCFCB;
+}
+
+.title-word-4 {
+  --color-1: #3D8DAE;
+  --color-2: #DF8453;
+  --color-3: #E4A9A8;
+}
+
+@@keyframes color-animation {
+  0%    {color: var(--color-1)}
+  32%   {color: var(--color-1)}
+  33%   {color: var(--color-2)}
+  65%   {color: var(--color-2)}
+  66%   {color: var(--color-3)}
+  99%   {color: var(--color-3)}
+  100%  {color: var(--color-1)}
+}
+
+/* Here are just some visual styles. 🖌 */
+
+
+.title {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 800;
+  font-size: 1.3vw;
+  text-transform: uppercase;
+}
+    .ownheading {
+        font-size: 20px;
+        text-shadow: 2px 2px 2px #CCCCCC;
+    }
+    #bottom {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+    }
     .heading-container {
         padding: 10px;
         position: relative;
@@ -24,45 +81,61 @@
             padding: 0 20px;
         }
     }
-
+ 
+    @@media (min-width: 376px) and (max-width: 800px) {
+        .heading-container {
+            background-size: 600px 350px;
+            background-image: url('/images/mainpic.jpg');
+        }
+    }
     @@media (min-width: 576px) and (max-width: 1281px) {
         .heading-container {
-            background-size: 900px 350px;
-            background-image: url('/images/free-html-templates-1200.jpg');
+            background-size: 800px 350px;
+            background-image: url('/images/mainpic.jpg');
         }
     }
 
     @@media (min-width: 1281px) and (max-width: 1700px) {
         .heading-container {
-            background-size: 1300px 350px;
-            background-image: url('/images/free-html-templates-1600.jpg');
+            background-size: 900px 350px;
+            background-image: url('/images/mainpic.jpg');
         }
     }
 
     @@media (min-width: 1700px) {
         .heading-container {
             background-size: 1620px 350px;
-            background-image: url('/images/free-html-templates-1920.jpg');
+            background-image: url('/images/mainpic.jpg');
         }
     }
 </style>
+
 <div class="text-left">    
-    <div class="text-center" style="font-family: 'Helvetica Neue', sans-serif; font-size: 23px; letter-spacing: 1px; line-height: 1.5; text-align: center;">Learning Management System</div>
-    <div class="text-right" style="font-family: 'Helvetica Neue', sans-serif;color:firebrick;font-size:11px;margin:0; letter-spacing: 1px;">Home</div>
+    <div class="text-center" style="font-family: 'Helvetica Neue', sans-serif; font-size: 23px; letter-spacing: 1px; line-height: 1.5; text-align: center;color: #22845a;">Learning Management System</div>
+    <div class="text-center"><h6 style="color:black;letter-spacing: 1px">Quality Education at Your Doorstep!</h6></div>
+    @*<div class="text-right" style="font-family: 'Helvetica Neue', sans-serif;color:firebrick;font-size:11px;margin:0; letter-spacing: 1px;">Home</div>*@
 </div>
 <hr style="height: 2px; background-color: #09db94;margin-top:0" />
+
 <div class="row">
     <div class="col-md-12">
-        <div class="heading-container">
-            <div class="heading-block ">
-                <div style="margin-bottom:15px">
-                    <img src="/images/logo_gob.png" width="70" />
+        <div class="heading-container" style="display:block">
+
+
+
+            <h2 class="title">
+                <span class="title-word title-word-1">Hamara Khwab, </span>
+                <span class="title-word title-word-2">Parha</span>
+                <span class="title-word title-word-3">Likha</span>
+                <span class="title-word title-word-4">Balochistan</span>
+            </h2>            
+           
+            @*<div class="me">Hamara Khwab, Parha Likha Balochistan</div>*@
+            <div id="bottom" class="col-12">
+                <div class="text-center">
+                    <img src="/images/itlogo.jpeg" class="rounded-circle" width="100" />
                 </div>
-                <h5 style="color:antiquewhite;letter-spacing: 1px">Now Education at Your Doorstep!</h5>
-                <div class="heading-description">
-                    <p style="letter-spacing: 1px">Initiative of Government of Balochistan</p>
-                    <p style="font-size:12px;color:azure; letter-spacing: 1px">Parha Likha Balochistan</p>
-                </div>
+                <div style="font-size:12px"><p style="margin:0">DIRECTORATE GENERAL IT<br />SCIENCE & IT DEPARTMENT,  BALOCHISTAN</p></div>
             </div>
         </div>
     </div>
