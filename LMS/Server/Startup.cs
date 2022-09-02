@@ -23,7 +23,7 @@ namespace LMS.Server
         {
             Configuration = configuration;
         }
-
+        private readonly string _policyName = "CorsPolicy";
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -55,7 +55,16 @@ namespace LMS.Server
                 .AddIdentityServerJwt();
 
             services.AddControllersWithViews();
-            services.AddRazorPages();                 
+            services.AddRazorPages();
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy(name: _policyName, builder =>
+                {
+                    builder.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -80,6 +89,7 @@ namespace LMS.Server
             app.UseRouting();
 
             app.UseIdentityServer();
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseAuthentication();
             app.UseAuthorization();
 

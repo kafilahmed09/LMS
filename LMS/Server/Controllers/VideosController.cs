@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LMS.Server.Data;
 using LMS.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LMS.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
     public class VideosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

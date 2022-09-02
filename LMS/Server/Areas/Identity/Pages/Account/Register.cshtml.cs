@@ -63,6 +63,7 @@ namespace LMS.Server.Areas.Identity.Pages.Account
             [Required]
             [Display(Name = "School")]
             public int SchoolId { get; set; }
+            public string Other { get; set; }
             /*[Required]
             [DataType(DataType.Text)]
             [Display(Name = "User Name")]
@@ -102,7 +103,7 @@ namespace LMS.Server.Areas.Identity.Pages.Account
             {
                 var firstpart = Input.Email.Substring(0, Input.Email.IndexOf('@'));
 
-                var user = new ApplicationUser { UserName = firstpart, Email = Input.Email, DistrictId = Input.DistrictId, SchoolId = Input.SchoolId };
+                var user = new ApplicationUser { UserName = firstpart, Email = Input.Email, Other = Input.Other, DistrictId = Input.DistrictId, SchoolId = Input.SchoolId };
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {

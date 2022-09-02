@@ -1,0 +1,50 @@
+﻿@page "/districtsummary"
+@using LMS.Shared.Models;
+@inject NavigationManager Navigate
+@inject HttpClient Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@attribute [Authorize]
+<h3>List of Enrollment District Wise</h3>
+
+@if (districtSummary == null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>District</th>
+                <th>Enroll</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var district in districtSummary)
+            {
+                <tr>
+                    <td>@district.DistrictName</td>                   
+                    <td>@district.Enroll</td>                   
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<DistrictSummary> districtSummary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            districtSummary = await Http.GetFromJsonAsync<List<DistrictSummary>>("api/DistrictSummary");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+}

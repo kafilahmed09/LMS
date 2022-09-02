@@ -28,11 +28,14 @@
                     <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
                 </NavLink>
             </li>*@
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="Grades/View">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Grades
-            </NavLink>
-        </li>
+    <li class="nav-item px-3">
+        <NavLink class="nav-link" href="Grades/View">
+            <span class="oi oi-list-rich" aria-hidden="true"></span> Grades
+        </NavLink>
+        <NavLink class="nav-link" href="DistrictSummary">
+            <span class="oi oi-list-rich" aria-hidden="true"></span> Statistics
+        </NavLink>
+    </li>
         <AuthorizeView>
             <Authorized>
                 @*<a href="authentication/profile">Hello, @context.User.Identity.Name!</a>*@                                

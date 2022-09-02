@@ -10,5 +10,6 @@ namespace LMS.Server.Models
     {
         public int DistrictId { get; set; }
         public int SchoolId { get; set; }
+        public string Other { get; set; }
     }
 }

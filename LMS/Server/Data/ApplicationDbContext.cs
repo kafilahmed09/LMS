@@ -30,5 +30,6 @@ namespace LMS.Server.Data
         public DbSet<LMS.Shared.Models.Chapter> Chapters { get; set; }
         public DbSet<LMS.Shared.Models.Video> Videos { get; set; }                
         public DbSet<LMS.Shared.Models.Topic> Topic { get; set; }
+        public DbSet<LMS.Shared.Models.DistrictSummary> DistrictSummary { get; set; }
     }
 }
